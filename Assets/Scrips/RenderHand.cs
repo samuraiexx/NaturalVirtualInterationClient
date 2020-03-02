@@ -7,7 +7,7 @@ public class RenderHand : MonoBehaviour
 {
   FrameProcessor frameProcessor;
   FrameProvider frameProvider;
-  private List<GameObject> lastSpheres = new List<GameObject>();
+  private List<GameObject> lastHandObjects = new List<GameObject>();
   public string IP_ADDRESS = "127.0.0.1";
   public GameObject projectionScreen;
   public bool debugMode = false;
@@ -51,28 +51,72 @@ public class RenderHand : MonoBehaviour
   }
   private void renderCurrentHand(float[] points)
   {
-    lastSpheres.ForEach(Destroy);
-    lastSpheres.Clear();
+    lastHandObjects.ForEach(Destroy);
+    lastHandObjects.Clear();
 
-    for (int i = 0; i < points.Length; i += 3)
+    var root = ModelUtils.createSphere(new Vector3(points[0], points[1], points[2]));
+    lastHandObjects.Add(root);
+
+    for (int i = 3; i < points.Length; i += 3)
     {
-      GameObject sphere = GameObject.CreatePrimitive(PrimitiveType.Sphere);
-      sphere.transform.localScale = new Vector3(10, 10, 10);
+      int id = i/3;
+      int parentId = getParentId(id);
 
-      if(points[i] == 0) return;
-      sphere.transform.position = new Vector3(
-        points[i],
-        points[i + 1],
-        points[i + 2]
+      if(isDuplicate(id)) {
+        continue;
+      }
+
+      var bone = ModelUtils.createBone(
+        new Vector3(
+          points[3*parentId],
+          points[3*parentId + 1],
+          points[3*parentId + 2]
+        ), 
+        new Vector3(
+          points[3*id],
+          points[3*id + 1],
+          points[3*id + 2]
+        ) 
       );
 
-      sphere.GetComponent<Renderer>().material.color = new Color(0, 255, 0);
-      lastSpheres.Add(sphere);
+      lastHandObjects.Add(bone);
     }
   }
 
   ~RenderHand() {
-      lastSpheres.ForEach(Destroy);
-      lastSpheres.Clear();
+      lastHandObjects.ForEach(Destroy);
+      lastHandObjects.Clear();
   }
+
+  private bool isDuplicate(int id) {
+    switch(id) {
+      case 2:
+      case 7:
+      case 12:
+      case 17:
+      case 22:
+        return true;
+      default:
+        return false;
+    }
+  }
+  private int getParentId(int id) {
+    switch(id) {
+      case 0:
+      case 1:
+      case 2:
+      case 6:
+      case 7:
+      case 11:
+      case 12:
+      case 16:
+      case 17:
+      case 21:
+      case 22:
+        return 0;
+      default:
+        return id - 1;
+    }
+  }
+
 }
