@@ -29,6 +29,8 @@ public FrameProcessor(string ipAddressString) {
       Debug.Log($"Error: {ex.ToString()}");
     }
 }
+
+  // TODO: Return Vector3[] and Vector2[] instead
   public Tuple<float[], float[]> getHandPoints3dAnd2d(byte[] img) {
     int size = img.Length;
     byte[] msg = new byte[4 + img.Length];
