@@ -217,7 +217,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 8bcbb06df584e88479759e12f9d93c22, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  background: {fileID: 1690823907}
+  IP_ADDRESS: 127.0.0.1
+  projectionScreen: {fileID: 1690823907}
+  debugMode: 1
 --- !u!1 &237586222
 GameObject:
   m_ObjectHideFlags: 0

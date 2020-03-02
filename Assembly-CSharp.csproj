@@ -45,7 +45,12 @@
     <ImplicitlyExpandDesignTimeFacades>false</ImplicitlyExpandDesignTimeFacades>
   </PropertyGroup>
   <ItemGroup>
-     <Compile Include="Assets\RenderHand.cs" />
+     <Compile Include="Assets\Scrips\CameraFrameProvider.cs" />
+     <Compile Include="Assets\Scrips\FrameProcessor.cs" />
+     <Compile Include="Assets\Scrips\FrameProvider.cs" />
+     <Compile Include="Assets\Scrips\RenderHand.cs" />
+     <Compile Include="Assets\Scrips\TestFrameProvider.cs" />
+     <Compile Include="Assets\Scrips\TextureUtils.cs" />
  <Reference Include="UnityEngine">
  <HintPath>C:/Program Files/Unity/Hub/Editor/2019.3.3f1/Editor/Data/Managed/UnityEngine/UnityEngine.dll</HintPath>
  </Reference>
