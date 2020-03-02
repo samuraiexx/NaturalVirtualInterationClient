@@ -1,5 +1,4 @@
 ﻿using System;
-using System.IO;
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -34,50 +33,54 @@ public class RenderHand : MonoBehaviour
     drawCurrentHandOnProjectionScreen(points2d);
   }
 
-  private void drawCurrentHandOnProjectionScreen(float[] points) {
+  private void drawCurrentHandOnProjectionScreen(Vector2[] points) {
     Texture2D backgroundTexture = projectionScreen 
       .GetComponent<Renderer>()
       .material.mainTexture as Texture2D;
 
-    for(int i = 0; i < points.Length; i+=2) {
-      TextureUtils.DrawCircle(
-        backgroundTexture,
-        (int)points[i],
-        frameProvider.HEIGHT - (int)points[i + 1],
-        3,
-        new Color(255, 0, 0)
-      );
-    }
-  }
-  private void renderCurrentHand(float[] points)
-  {
-    lastHandObjects.ForEach(Destroy);
-    lastHandObjects.Clear();
-
-    var root = ModelUtils.createSphere(new Vector3(points[0], points[1], points[2]));
-    lastHandObjects.Add(root);
-
-    for (int i = 3; i < points.Length; i += 3)
-    {
-      int id = i/3;
-      int parentId = getParentId(id);
-
+    for(int id = 0; id < points.Length; id++) {
       if(isDuplicate(id)) {
         continue;
       }
 
-      var bone = ModelUtils.createBone(
-        new Vector3(
-          points[3*parentId],
-          points[3*parentId + 1],
-          points[3*parentId + 2]
-        ), 
-        new Vector3(
-          points[3*id],
-          points[3*id + 1],
-          points[3*id + 2]
-        ) 
+      var parentId = getParentId(id); 
+      // For some reason the points are mirrored, this is  a hack to fix it
+      points[id]= new Vector2(points[id].x, frameProvider.HEIGHT - points[id].y);
+
+      TextureUtils.drawCircle(
+        backgroundTexture,
+        points[id],
+        3,
+        id <= 5 ? new Color(0, 255, 0) : new Color(255, 0, 0)
       );
+
+      TextureUtils.drawLine(
+        backgroundTexture,
+        points[id],
+        points[parentId],
+        new Color(255, 0, 0)
+      );
+
+    }
+
+    backgroundTexture.Apply();
+  }
+  private void renderCurrentHand(Vector3[] points)
+  {
+    lastHandObjects.ForEach(Destroy);
+    lastHandObjects.Clear();
+
+    var root = ModelUtils.createSphere(points[0]);
+    lastHandObjects.Add(root);
+
+    for (int id = 0; id < points.Length; id++)
+    {
+      if(isDuplicate(id)) {
+        continue;
+      }
+
+      int parentId = getParentId(id);
+      var bone = ModelUtils.createBone(points[parentId], points[id]);
 
       lastHandObjects.Add(bone);
     }
@@ -90,11 +93,11 @@ public class RenderHand : MonoBehaviour
 
   private bool isDuplicate(int id) {
     switch(id) {
-      case 2:
-      case 7:
-      case 12:
-      case 17:
-      case 22:
+      case 1:
+      case 6:
+      case 11:
+      case 16:
+      case 21:
         return true;
       default:
         return false;

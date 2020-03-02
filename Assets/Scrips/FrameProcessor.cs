@@ -30,8 +30,7 @@ public FrameProcessor(string ipAddressString) {
     }
 }
 
-  // TODO: Return Vector3[] and Vector2[] instead
-  public Tuple<float[], float[]> getHandPoints3dAnd2d(byte[] img) {
+  public Tuple<Vector3[], Vector2[]> getHandPoints3dAnd2d(byte[] img) {
     int size = img.Length;
     byte[] msg = new byte[4 + img.Length];
 
@@ -46,16 +45,30 @@ public FrameProcessor(string ipAddressString) {
     int bytesSent = sender.Send(msg);
     int bytesRec = sender.Receive(bytes);
 
-    float[] points3d = new float[3*JOINTS_3D];
-    float[] points2d = new float[2*JOINTS_2D];
+    float[] buffer3d = new float[3*JOINTS_3D];
+    float[] buffer2d = new float[2*JOINTS_2D];
 
     const int JOINTS_3D_SIZE = 4*3*JOINTS_3D;
     const int JOINTS_2D_SIZE = 4*2*JOINTS_2D;
 
-    Buffer.BlockCopy(bytes, 0, points3d, 0, JOINTS_3D_SIZE);
-    Buffer.BlockCopy(bytes, JOINTS_3D_SIZE, points2d, 0, JOINTS_2D_SIZE);
+    Buffer.BlockCopy(bytes, 0, buffer3d, 0, JOINTS_3D_SIZE);
+    Buffer.BlockCopy(bytes, JOINTS_3D_SIZE, buffer2d, 0, JOINTS_2D_SIZE);
 
-    return new Tuple<float[], float[]>(points3d, points2d);
+    Vector3[] points3d = new Vector3[JOINTS_3D];
+    Vector2[] points2d = new Vector2[JOINTS_2D];
+
+    for(int i = 0; i < buffer3d.Length; i+=3) {
+      points3d[i/3].x = buffer3d[i];
+      points3d[i/3].y = buffer3d[i + 1];
+      points3d[i/3].z = buffer3d[i + 2];
+    }
+
+    for(int i = 0; i < buffer2d.Length; i+=2) {
+      points2d[i/2].x = buffer2d[i];
+      points2d[i/2].y = buffer2d[i + 1];
+    }
+
+    return new Tuple<Vector3[], Vector2[]>(points3d, points2d);
   }
 
   ~FrameProcessor() {
