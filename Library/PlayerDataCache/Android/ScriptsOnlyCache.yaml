@@ -28,6 +28,10 @@ ScriptsOnlyBuild:
       Script: {instanceID: 0}
     - Class: 48
       Script: {instanceID: 0}
+    - Class: 54
+      Script: {instanceID: 0}
+    - Class: 65
+      Script: {instanceID: 0}
     - Class: 81
       Script: {instanceID: 0}
     - Class: 104
@@ -35,8 +39,10 @@ ScriptsOnlyBuild:
     - Class: 108
       Script: {instanceID: 0}
     - Class: 114
-      Script: {instanceID: 12690}
+      Script: {instanceID: 12724}
     - Class: 115
+      Script: {instanceID: 0}
+    - Class: 137
       Script: {instanceID: 0}
     - Class: 157
       Script: {instanceID: 0}
@@ -357,7 +363,7 @@ ScriptsOnlyBuild:
     className: BeforeAfterTestCommandState
   - hash:
       serializedVersion: 2
-      Hash: 6c61a7cab90ca0e4aa3f29f7c42ac60e
+      Hash: 62dbc1ea781b654f9811af5664e9cae9
     assemblyName: Assembly-CSharp.dll
     namespaceName: 
     className: RenderHand

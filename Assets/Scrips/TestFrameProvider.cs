@@ -3,12 +3,10 @@ using System.IO;
 
 public class TestFrameProvider : FrameProvider
 {
-  private float startTime;
   private int frameCounter = 0;
-  const int FRAMES = 256;
+  const int FRAMES = 598;
 
   public TestFrameProvider(GameObject projectionScreen) {
-    startTime = Time.time;
     this.projectionScreen = projectionScreen;
   }
 

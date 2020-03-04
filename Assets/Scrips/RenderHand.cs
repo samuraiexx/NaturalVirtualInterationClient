@@ -7,12 +7,14 @@ public class RenderHand : MonoBehaviour
   FrameProcessor frameProcessor;
   FrameProvider frameProvider;
   private List<GameObject> lastHandObjects = new List<GameObject>();
-  public string IP_ADDRESS = "127.0.0.1";
+  private GameObject mainCamera;
+  public string IP_ADDRESS = "192.168.42.31";
   public GameObject projectionScreen;
   public bool debugMode = false;
 
   void Start()
   {
+    mainCamera = GameObject.FindGameObjectWithTag("MainCamera");
     frameProcessor = new FrameProcessor(IP_ADDRESS);
     if(debugMode) {
       frameProvider = new TestFrameProvider(projectionScreen);
@@ -70,7 +72,8 @@ public class RenderHand : MonoBehaviour
     lastHandObjects.ForEach(Destroy);
     lastHandObjects.Clear();
 
-    var root = ModelUtils.createSphere(points[0]);
+    var root = ModelUtils.createSphere(points[0], mainCamera.transform);
+
     lastHandObjects.Add(root);
 
     for (int id = 0; id < points.Length; id++)
@@ -80,7 +83,7 @@ public class RenderHand : MonoBehaviour
       }
 
       int parentId = getParentId(id);
-      var bone = ModelUtils.createBone(points[parentId], points[id]);
+      var bone = ModelUtils.createBone(points[parentId], points[id], mainCamera.transform);
 
       lastHandObjects.Add(bone);
     }

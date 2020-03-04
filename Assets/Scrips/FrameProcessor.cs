@@ -68,6 +68,19 @@ public FrameProcessor(string ipAddressString) {
       points2d[i/2].y = buffer2d[i + 1];
     }
 
+    const float newScale = 0.0015f;
+    var root = newScale*points3d[0];
+
+    for(int i = 0; i < points3d.Length; i++) {
+      points3d[i] = newScale*points3d[i];
+
+      points3d[i] = new Vector3(
+        -0.50f - points3d[i].x - 2.5f*root.x,
+        0.25f + points3d[i].y + 1*root.y,
+        0.3f + points3d[i].z
+      );
+    }
+
     return new Tuple<Vector3[], Vector2[]>(points3d, points2d);
   }
 

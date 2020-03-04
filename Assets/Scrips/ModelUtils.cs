@@ -2,34 +2,42 @@
 
 public class ModelUtils 
 {
-  static public GameObject createBone(Vector3 orig, Vector3 dest) {
+  static public GameObject createBone(Vector3 orig, Vector3 dest, Transform parent) {
     const float modelHeight = 3.66f;
     Object prefab = Resources.Load<Object>("bone");
     GameObject bone = (GameObject) Object.Instantiate(prefab);
+    bone.transform.SetParent(parent);
     var delta = dest - orig;
 
     float scaleFactor = delta.magnitude/modelHeight;
     bone.transform.localScale = 
-        new Vector3(400, 400, 100*scaleFactor);
+        new Vector3(0.5f, 0.5f, 100*scaleFactor);
 
-    bone.transform.SetPositionAndRotation(
-      orig + delta/modelHeight,
+    bone.transform.localRotation = 
       Quaternion.FromToRotation(
         new Vector3(0, 0, -1), delta
-      )
-    );
+      );
+
+    bone.transform.localPosition = orig + delta/modelHeight;
 
     bone.GetComponent<Renderer>().material.color = new Color(255, 0, 0);
+    bone.AddComponent<CapsuleCollider>();
 
     return bone;
   }
 
-  static public GameObject createSphere(Vector3 position) {
+  static public GameObject createSphere(Vector3 position, Transform parent = null) {
 
       GameObject sphere = GameObject.CreatePrimitive(PrimitiveType.Sphere);
-      sphere.transform.localScale = new Vector3(10, 10, 10);
-      sphere.transform.position = position;
+      sphere.transform.SetParent(parent);
+      sphere.transform.localScale = new Vector3(0.03f, 0.03f, 0.03f);
+      sphere.transform.localPosition = position;
       sphere.GetComponent<Renderer>().material.color = new Color(255, 0, 0);
+      sphere.AddComponent<CapsuleCollider>();
+
+      var rigidBody = sphere.AddComponent<Rigidbody>();
+      rigidBody.useGravity = false;
+      rigidBody.mass = 1;
 
       return sphere;
   }
