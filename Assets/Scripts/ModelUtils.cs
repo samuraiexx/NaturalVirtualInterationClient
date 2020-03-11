@@ -2,6 +2,20 @@
 
 public class ModelUtils 
 {
+  static public GameObject createHand() {
+    Object prefab = Resources.Load<Object>("hand_prefab");
+    GameObject hand = (GameObject) Object.Instantiate(prefab);
+    return hand;
+  }
+
+  private static void debugHandJoint(GameObject joint) {
+    Debug.Log(joint.name);
+    for(int i=0; i<joint.transform.childCount; i++) {
+      GameObject child = joint.transform.GetChild(i).gameObject;
+      debugHandJoint(child);
+    }
+  }
+  
   static public GameObject createBone(Vector3 orig, Vector3 dest, Transform parent) {
     const float modelHeight = 3.66f;
     Object prefab = Resources.Load<Object>("bone");
