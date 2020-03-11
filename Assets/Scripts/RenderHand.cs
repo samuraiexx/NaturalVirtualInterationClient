@@ -4,25 +4,28 @@ using UnityEngine;
 
 public class RenderHand : MonoBehaviour
 {
-  FrameProcessor frameProcessor;
-  FrameProvider frameProvider;
+  private FrameProcessor frameProcessor;
+  private FrameProvider frameProvider;
   private List<GameObject> lastHandObjects = new List<GameObject>();
   private GameObject mainCamera;
+  private GameObject hand;
+  /** The pulse joint is not the root node, so we store it
+  /** in another GameObject **/
+  private GameObject handPulseJoint;
   public string IP_ADDRESS = "127.0.0.1";
   public GameObject projectionScreen;
   public bool debugMode = false;
 
-  public bool isHandRendered = false;
 
   public Vector3[] currentJointsPosition;
-
-  public GameObject hand;
-  public GameObject handPulseJoint;
 
   void Start()
   {
     mainCamera = GameObject.FindGameObjectWithTag("MainCamera");
     frameProcessor = new FrameProcessor(IP_ADDRESS);
+    hand = ModelUtils.createHand();
+    handPulseJoint = hand.transform.GetChild(0).GetChild(0).gameObject;
+
     if(debugMode) {
       frameProvider = new TestFrameProvider(projectionScreen);
       return;
@@ -33,14 +36,6 @@ public class RenderHand : MonoBehaviour
 
   private void Update() {
     byte[] img = frameProvider.getFrame();
-    if(!isHandRendered) {
-      hand = ModelUtils.createHand();
-      // The pulse joint is not the root node, so we store it
-      // in another GameObject
-      handPulseJoint = hand.transform.GetChild(0).GetChild(0).gameObject;
-      Debug.Log(handPulseJoint.name);
-      isHandRendered = true;
-    }
     if(img == null) {
       return;
     }
@@ -156,7 +151,6 @@ public class RenderHand : MonoBehaviour
       lastHandObjects.ForEach(Destroy);
       lastHandObjects.Clear();
       Destroy(hand);
-      isHandRendered = false;
   }
 
   private bool isDuplicate(int id) {

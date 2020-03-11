@@ -4,8 +4,7 @@ public class ModelUtils
 {
   static public GameObject createHand() {
     Object prefab = Resources.Load<Object>("hand_prefab");
-    GameObject hand = (GameObject) Object.Instantiate(prefab);
-    return hand;
+    return (GameObject) Object.Instantiate(prefab);
   }
 
   private static void debugHandJoint(GameObject joint) {
