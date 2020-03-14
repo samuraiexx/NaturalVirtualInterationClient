@@ -15,10 +15,6 @@ public class RenderHand : MonoBehaviour
   public string IP_ADDRESS = "127.0.0.1";
   public GameObject projectionScreen;
   public bool debugMode = false;
-
-
-  public Vector3[] currentJointsPosition;
-
   void Start()
   {
     mainCamera = GameObject.FindGameObjectWithTag("MainCamera");
@@ -41,9 +37,12 @@ public class RenderHand : MonoBehaviour
     }
 
     var (points3d, points2d) = frameProcessor.getHandPoints3dAnd2d(img);
-    currentJointsPosition = points3d;
-    renderCurrentHand(points3d);
-    drawCurrentHandOnProjectionScreen(points2d);
+    //renderCurrentHand(points3d);
+    //drawCurrentHandOnProjectionScreen(points2d);
+    setPulsePositionAndRotation(points3d);
+    for(int i=0; i<handPulseJoint.transform.childCount; i++) {
+      updateJointsPositions(handPulseJoint.transform.GetChild(i).gameObject, points3d, 5*i+1);
+    }
   }
 
   private void drawCurrentHandOnProjectionScreen(Vector2[] points) {
@@ -79,24 +78,17 @@ public class RenderHand : MonoBehaviour
     backgroundTexture.Apply();
   }
 
-  private void setPulseRotation(Vector3[] points) {
-    Vector3 fingerJoint = handPulseJoint.transform.GetChild(1).position;
-    Vector3 pinkyJoint = handPulseJoint.transform.GetChild(4).position;
-
-    Vector3 currentPulseToFinger = fingerJoint - handPulseJoint.transform.position;
-    Vector3 currentPulseToPinky = pinkyJoint - handPulseJoint.transform.position;
-
+  private void setPulsePositionAndRotation(Vector3[] points) {
     Vector3 newPulseToFinger = points[7] - points[0];
+    Vector3 newPulseToMiddle = points[12] - points[0];
     Vector3 newPulseToPinky = points[22] - points[0];
 
-    handPulseJoint.transform.Rotate(
-      Quaternion.FromToRotation(currentPulseToFinger, newPulseToFinger).eulerAngles
+    hand.transform.rotation = Quaternion.LookRotation(
+      Vector3.Cross(newPulseToFinger, newPulseToPinky), 
+      newPulseToMiddle
     );
 
-    handPulseJoint.transform.Rotate(
-      newPulseToFinger,
-      Vector3.Angle(currentPulseToPinky, newPulseToPinky)
-    );
+    handPulseJoint.transform.position = points[0];
   }
 
   private void updateJointsPositions(GameObject joint,
@@ -107,22 +99,20 @@ public class RenderHand : MonoBehaviour
     if (isDuplicate(id)) {
       id++;
     }
-    moveJoint(joint, points[id], points[getParentId(id)]);
+    Debug.Log("id = " + id.ToString());
+    GameObject parent = joint.transform.parent.gameObject;
+    moveJoint(joint, parent, points[id], points[getParentId(id)]);
     for(int i = 0; i < joint.transform.childCount; i++) {
       GameObject child = joint.transform.GetChild(i).gameObject;
       updateJointsPositions(child, points, id+1);
     }
   }
 
-  private void moveJoint(GameObject joint, Vector3 orig, Vector3 dest) {
-    var delta = dest - orig;
-
-    joint.transform.SetPositionAndRotation(
-      orig + delta,
-      Quaternion.FromToRotation(
-        new Vector3(0, 0, -1), delta
-      )
-    );
+  private void moveJoint(GameObject joint, GameObject parent, Vector3 jointPos, Vector3 parentPos) {
+    if (parent != handPulseJoint) {
+      parent.transform.LookAt(jointPos);
+      parent.transform.Rotate(90, 0, 0);
+    }
   }
 
   private void renderCurrentHand(Vector3[] points)
