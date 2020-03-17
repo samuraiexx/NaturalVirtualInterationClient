@@ -16,8 +16,10 @@ public class RenderHand : MonoBehaviour
   public GameObject projectionScreen;
   public bool debugMode = false;
 
-
-  public Vector3[] currentJointsPosition;
+  public Vector3[] currentJointsPosition {
+    get;
+    private set;
+  }
 
   void Start()
   {
