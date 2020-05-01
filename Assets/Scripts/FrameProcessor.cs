@@ -6,8 +6,8 @@ using UnityEngine;
 public class FrameProcessor
 {
   private string ipAddress;
-  private const int JOINTS_3D = 26;
-  private const int JOINTS_2D = 26;
+  private const int JOINTS_3D = 21;
+  private const int JOINTS_2D = 21;
   private Socket sender;
 
 public FrameProcessor(string ipAddressString) {

@@ -545,9 +545,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 8bcbb06df584e88479759e12f9d93c22, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  IP_ADDRESS: 192.168.42.31
+  IP_ADDRESS: 127.0.0.1
   projectionScreen: {fileID: 1690823907}
-  debugMode: 0
+  runMode: 0
 --- !u!4 &1972271011
 Transform:
   m_ObjectHideFlags: 0

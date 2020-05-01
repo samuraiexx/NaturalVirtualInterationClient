@@ -1,25 +1,27 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System; 
+ using System.Collections.Generic;
 using UnityEngine;
 
+public enum RunModes { FAKE_FRAMES, UNITY_REMOTE, PRODUCTION };
 public class RenderHand : MonoBehaviour
 {
+  public string IP_ADDRESS = "127.0.0.1";
+  public GameObject projectionScreen;
+  public RunModes runMode = RunModes.PRODUCTION;
+  public Vector3[] currentJointsPosition {
+    get;
+    private set;
+  }
+
   private FrameProcessor frameProcessor;
   private FrameProvider frameProvider;
+  private Grabber grabber;
   private List<GameObject> lastHandObjects = new List<GameObject>();
   private GameObject mainCamera;
   private GameObject hand;
   /** The pulse joint is not the root node, so we store it
   /** in another GameObject **/
   private GameObject handPulseJoint;
-  public string IP_ADDRESS = "127.0.0.1";
-  public GameObject projectionScreen;
-  public bool debugMode = false;
-
-  public Vector3[] currentJointsPosition {
-    get;
-    private set;
-  }
 
   void Start()
   {
@@ -28,12 +30,19 @@ public class RenderHand : MonoBehaviour
     hand = ModelUtils.createHand();
     handPulseJoint = hand.transform.GetChild(0).GetChild(0).gameObject;
 
-    if(debugMode) {
-      frameProvider = new TestFrameProvider(projectionScreen);
-      return;
+    grabber = new Grabber();
+
+    switch(runMode) {
+      case RunModes.FAKE_FRAMES: 
+        frameProvider = new TestFrameProvider(projectionScreen);
+        break;
+      case RunModes.UNITY_REMOTE:
+        frameProvider = new CameraFrameProvider(projectionScreen, true);
+        break;
+      case RunModes.PRODUCTION:
+        frameProvider = new CameraFrameProvider(projectionScreen);
+        break;
     }
-    
-    frameProvider = new CameraFrameProvider(projectionScreen);
   }
 
   private void Update() {
@@ -46,6 +55,7 @@ public class RenderHand : MonoBehaviour
     currentJointsPosition = points3d;
     renderCurrentHand(points3d);
     drawCurrentHandOnProjectionScreen(points2d);
+    grabber.processGrabbAction(currentJointsPosition);
   }
 
   private void drawCurrentHandOnProjectionScreen(Vector2[] points) {
@@ -54,10 +64,6 @@ public class RenderHand : MonoBehaviour
       .material.mainTexture as Texture2D;
 
     for(int id = 0; id < points.Length; id++) {
-      if(isDuplicate(id)) {
-        continue;
-      }
-
       var parentId = getParentId(id); 
       // For some reason the points are mirrored, this is  a hack to fix it
       points[id]= new Vector2(points[id].x, frameProvider.HEIGHT - points[id].y);
@@ -106,9 +112,6 @@ public class RenderHand : MonoBehaviour
     if (hand == null) {
       return;
     }
-    if (isDuplicate(id)) {
-      id++;
-    }
     moveJoint(joint, points[id], points[getParentId(id)]);
     for(int i = 0; i < joint.transform.childCount; i++) {
       GameObject child = joint.transform.GetChild(i).gameObject;
@@ -138,10 +141,6 @@ public class RenderHand : MonoBehaviour
 
     for (int id = 0; id < points.Length; id++)
     {
-      if(isDuplicate(id)) {
-        continue;
-      }
-
       int parentId = getParentId(id);
       var bone = ModelUtils.createBone(points[parentId], points[id], mainCamera.transform);
 
@@ -155,31 +154,14 @@ public class RenderHand : MonoBehaviour
       Destroy(hand);
   }
 
-  private bool isDuplicate(int id) {
-    switch(id) {
-      case 1:
-      case 6:
-      case 11:
-      case 16:
-      case 21:
-        return true;
-      default:
-        return false;
-    }
-  }
   private int getParentId(int id) {
     switch(id) {
       case 0:
       case 1:
-      case 2:
-      case 6:
-      case 7:
-      case 11:
-      case 12:
-      case 16:
+      case 5:
+      case 9:
+      case 13:
       case 17:
-      case 21:
-      case 22:
         return 0;
       default:
         return id - 1;
