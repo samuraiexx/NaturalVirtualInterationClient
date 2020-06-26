@@ -1,91 +1,55 @@
 ﻿using System;
-using System.Net;
-using System.Net.Sockets;
 using UnityEngine;
+using System.Collections;
+using UnityEngine.Networking;
 
-public class FrameProcessor
-{
+public class FrameProcessor {
   private string ipAddress;
+  private int port;
   private const int JOINTS_3D = 21;
   private const int JOINTS_2D = 21;
-  private Socket sender;
+  Encoder encoder;
 
-public FrameProcessor(string ipAddressString) {
-    IPHostEntry ipHostInfo = Dns.GetHostEntry(Dns.GetHostName());
-    IPAddress ipAddress = IPAddress.Parse(ipAddressString);
-    IPEndPoint remoteEP = new IPEndPoint(ipAddress, 2020);
+  public FrameProcessor(string ipAddress, int port, int width, int height) {
+    encoder = Encoder.getEncoder(width, height);
+  }
 
-    sender = new Socket(
-      ipAddress.AddressFamily,
-      SocketType.Stream,
-      ProtocolType.Tcp
-    );
+  public IEnumerator getHandPoseData(Color32[] frame) {
+    // TODO: Change to BSON
+    Byte[] encodedFrame = encoder.processFrame(frame);
 
-    try {
-      sender.Connect(remoteEP);
+    var IESendEncodedFrame = sendEncodedFrame(encodedFrame);
 
-      Debug.Log($"Socket connected to {sender.RemoteEndPoint.ToString()}");
-    } catch (Exception ex) {
-      Debug.Log($"Error: {ex.ToString()}");
-    }
-}
+    yield return IESendEncodedFrame;
+    var json = (string)IESendEncodedFrame.Current;
 
-  public Tuple<Vector3[], Vector2[]> getHandPoints3dAnd2d(byte[] img) {
-    int size = img.Length;
-    byte[] msg = new byte[4 + img.Length];
-
-    msg[3] = (byte)(size >> 24);
-    msg[2] = (byte)(size >> 16);
-    msg[1] = (byte)(size >> 8);
-    msg[0] = (byte)size;
-    Buffer.BlockCopy(img, 0, msg, 4, img.Length);
-
-    byte[] bytes = new byte[4*(3*JOINTS_3D + 2*JOINTS_2D)];
-
-    int bytesSent = sender.Send(msg);
-    int bytesRec = sender.Receive(bytes);
-
-    float[] buffer3d = new float[3*JOINTS_3D];
-    float[] buffer2d = new float[2*JOINTS_2D];
-
-    const int JOINTS_3D_SIZE = 4*3*JOINTS_3D;
-    const int JOINTS_2D_SIZE = 4*2*JOINTS_2D;
-
-    Buffer.BlockCopy(bytes, 0, buffer3d, 0, JOINTS_3D_SIZE);
-    Buffer.BlockCopy(bytes, JOINTS_3D_SIZE, buffer2d, 0, JOINTS_2D_SIZE);
-
-    Vector3[] points3d = new Vector3[JOINTS_3D];
-    Vector2[] points2d = new Vector2[JOINTS_2D];
-
-    for(int i = 0; i < buffer3d.Length; i+=3) {
-      points3d[i/3].x = buffer3d[i];
-      points3d[i/3].y = buffer3d[i + 1];
-      points3d[i/3].z = buffer3d[i + 2];
-    }
-
-    for(int i = 0; i < buffer2d.Length; i+=2) {
-      points2d[i/2].x = buffer2d[i];
-      points2d[i/2].y = buffer2d[i + 1];
-    }
+    PoseData poseData = JsonUtility.FromJson<SerializablePoseData>(json);
 
     const float newScale = 0.0015f;
-    var root = newScale*points3d[0];
+    var root = poseData.lostTrack ? new Vector3() : newScale * poseData.points3d[0];
 
-    for(int i = 0; i < points3d.Length; i++) {
-      points3d[i] = newScale*points3d[i];
+    for (int i = 0; i < poseData.points3d.Length; i++) {
+      poseData.points3d[i] = newScale * poseData.points3d[i];
 
-      points3d[i] = new Vector3(
-        -0.50f - points3d[i].x - 2.5f*root.x,
-        0.25f + points3d[i].y + 1*root.y,
-        0.3f + points3d[i].z
+      poseData.points3d[i] = new Vector3(
+        -0.50f + poseData.points3d[i].x - 2.5f * root.x,
+        0.25f - poseData.points3d[i].y + 1 * root.y,
+        0.3f + poseData.points3d[i].z
       );
     }
 
-    return new Tuple<Vector3[], Vector2[]>(points3d, points2d);
+    yield return poseData;
   }
 
-  ~FrameProcessor() {
-    sender.Shutdown(SocketShutdown.Both);
-    sender.Close();
+  IEnumerator sendEncodedFrame(Byte[] data) {
+    UnityWebRequest www = UnityWebRequest.Put("http://127.0.0.1:3030/processFrame", data);
+    yield return www.SendWebRequest();
+
+    if (www.isNetworkError || www.isHttpError) {
+      Debug.Log(www.error);
+      // TODO
+    } else {
+      yield return www.downloadHandler.text;
+    }
   }
 }
