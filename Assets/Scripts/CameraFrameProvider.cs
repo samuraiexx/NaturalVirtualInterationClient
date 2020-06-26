@@ -1,8 +1,7 @@
 ﻿using System.Collections.Generic;
 using UnityEngine;
 
-public class CameraFrameProvider : FrameProvider
-{
+public class CameraFrameProvider : FrameProvider {
   private WebCamTexture backCam;
   private float startTime;
 
@@ -10,7 +9,7 @@ public class CameraFrameProvider : FrameProvider
     startTime = Time.time;
     this.projectionScreen = projectionScreen;
 
-    if(useRemoteCamera){
+    if (useRemoteCamera) {
       return;
     }
 
@@ -18,29 +17,25 @@ public class CameraFrameProvider : FrameProvider
     backCam.Play();
   }
 
-  public override byte[] getFrame() {
-    if(Time.time - startTime > 2 && backCam == null) {
+  public override void getFrame(Color32[] frame) {
+    if (Time.time - startTime > 2 && backCam == null) {
       backCam = new WebCamTexture("Remote Camera 0", WIDTH, HEIGHT, FPS);
       backCam.Play();
-    }
-
-    if(Time.time - startTime < 3) { // It's Necessary to wait for camera loading
-      return null;
     }
 
     Texture2D snap = new Texture2D(
       backCam.width,
       backCam.height,
-      TextureFormat.RGB24,
+      TextureFormat.RGBA32,
       false
     );
 
-    snap.SetPixels(backCam.GetPixels());
+    backCam.GetPixels32(frame);
+    snap.SetPixels32(frame);
     snap.Apply();
 
-    var encondedImage = snap.EncodeToPNG();
     projectionScreen.GetComponent<Renderer>().material.mainTexture = snap;
 
-    return encondedImage;
+    return;
   }
 }
