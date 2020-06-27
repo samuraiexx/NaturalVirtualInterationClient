@@ -11,6 +11,8 @@ public class FrameProcessor {
   Encoder encoder;
 
   public FrameProcessor(string ipAddress, int port, int width, int height) {
+    this.ipAddress = ipAddress;
+    this.port = port;
     encoder = Encoder.getEncoder(width, height);
   }
 
@@ -42,11 +44,11 @@ public class FrameProcessor {
   }
 
   IEnumerator sendEncodedFrame(Byte[] data) {
-    UnityWebRequest www = UnityWebRequest.Put("http://127.0.0.1:3030/processFrame", data);
+    UnityWebRequest www = UnityWebRequest.Put($"http://{ipAddress}:{port}/processFrame", data);
     yield return www.SendWebRequest();
 
     if (www.isNetworkError || www.isHttpError) {
-      Debug.Log(www.error);
+      throw new Exception(www.error);
       // TODO
     } else {
       yield return www.downloadHandler.text;
