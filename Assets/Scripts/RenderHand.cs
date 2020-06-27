@@ -64,7 +64,7 @@ public class RenderHand : MonoBehaviour {
   private IEnumerator getPointsAndProcess() {
     while (!destroyed) {
       double deltaTime = (DateTime.Now - lastFrameProcessTime).TotalSeconds;
-      Debug.Log($"Processing deltaTime: {deltaTime}");
+      // Debug.Log($"Processing deltaTime: {deltaTime}");
 
       if (deltaTime < processMinDeltaTime) {
         yield return new WaitForSecondsRealtime((float)(processMinDeltaTime - deltaTime));
