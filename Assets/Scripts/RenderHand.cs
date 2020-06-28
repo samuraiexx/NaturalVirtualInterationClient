@@ -104,7 +104,7 @@ public class RenderHand : MonoBehaviour {
     for (int id = 0; id < points.Length; id++) {
       var parentId = getParentId(id);
       // For some reason the points are mirrored, this is  a hack to fix it
-      points[id] = new Vector2(frameProvider.WIDTH - points[id].x, frameProvider.HEIGHT - points[id].y);
+      points[id] = new Vector2(points[id].x, frameProvider.HEIGHT - points[id].y);
 
       TextureUtils.drawCircle(
         backgroundTexture,
