@@ -1,12 +1,14 @@
 ﻿using UnityEngine;
 
-public abstract class FrameProvider 
-{
-  public GameObject projectionScreen;
-  public int WIDTH {get;} = 640;
-  public int HEIGHT {get;} = 480;
+public abstract class FrameProvider {
+  protected int width;
+  protected int height;
   protected const int FPS = 30;
 
-  public abstract byte[] getFrame();
+  public abstract void getFrame(Color32[] frame);
+  public FrameProvider(int width, int height) {
+    this.width = width;
+    this.height = height;
+  }
 }
 
