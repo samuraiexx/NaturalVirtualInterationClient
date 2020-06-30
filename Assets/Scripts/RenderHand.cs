@@ -29,16 +29,21 @@ public class RenderHand : MonoBehaviour {
 
   private void drawCurrentHandOnProjectionScreen() {
     var poseData = poseDataProvider.poseData;
-    if (poseData == null || poseData.lostTrack) {
+    Texture2D texture = new Texture2D(poseDataProvider.width, poseDataProvider.height);
+    texture.SetPixels32(poseDataProvider.frame);
+
+    if (poseData.lostTrack) {
+      texture.Apply();
+      projectionScreen
+        .GetComponent<Renderer>()
+        .material
+        .mainTexture = texture;
       return;
     }
 
     Vector2[] points = new Vector2[poseData.points2d.Length];
     Array.Copy(poseData.points2d, points, poseData.points2d.Length);
 
-    Texture2D texture = new Texture2D(poseDataProvider.width, poseDataProvider.height);
-
-    texture.SetPixels32(poseDataProvider.frame);
 
     for (int id = 0; id < points.Length; id++) {
       var parentId = getParentId(id);
@@ -113,7 +118,7 @@ public class RenderHand : MonoBehaviour {
 
   private void renderCurrentHand() {
     var poseData = poseDataProvider.poseData;
-    if (poseData == null || poseData.lostTrack) {
+    if (poseData.lostTrack) {
       return;
     }
     var points = poseData.points3d;

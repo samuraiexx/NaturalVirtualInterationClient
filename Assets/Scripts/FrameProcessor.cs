@@ -11,7 +11,6 @@ public class FrameProcessor {
   private int width, height;
   public static float AverageSendTime = 0.120f;
   public static long SendCounter = 0;
-  private long lastId = 0;
   private bool sendingFrame = false;
 
 
@@ -23,12 +22,7 @@ public class FrameProcessor {
   }
 
   public IEnumerator getHandPoseData(Byte[] frame, bool encoded) {
-    long id = ++lastId;
-    yield return new WaitUntil(() => sendingFrame == false || lastId > id);
-    if (lastId > id) {
-      yield return null;
-      yield break;
-    }
+    yield return new WaitUntil(() => sendingFrame == false);
 
     sendingFrame = true;
 
@@ -64,6 +58,7 @@ public class FrameProcessor {
   IEnumerator sendFrame(Byte[] data, bool encoded) {
     // Debug.Log($"Data: {data.Length}");
     DateTime startTime = DateTime.Now;
+
     UnityWebRequest www = UnityWebRequest.Put($"http://{ipAddress}:{port}/processFrame", data);
     if (encoded) {
       www.SetRequestHeader("Encoded", "vp8");
@@ -77,7 +72,8 @@ public class FrameProcessor {
       yield return www.downloadHandler.text;
     }
     double deltaTime = (DateTime.Now - startTime).TotalSeconds;
-    AverageSendTime = (float)(AverageSendTime * SendCounter + deltaTime) / (++SendCounter);
+    AverageSendTime = (float)(2 * AverageSendTime + deltaTime) / 3;
+    SendCounter++;
 
     // Debug.Log($"Send data deltaTime: {deltaTime}");
   }

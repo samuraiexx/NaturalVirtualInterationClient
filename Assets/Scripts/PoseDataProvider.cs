@@ -46,24 +46,18 @@ public class PoseDataProvider : MonoBehaviour {
     encoder = Encoder.getEncoder(width, height);
 
     lastUpdateTime = DateTime.Now;
+
     StartCoroutine(getPointsAndProcess());
   }
 
-  private IEnumerator getPointsAndProcess(float waitTime = 0) {
-    yield return new WaitForSeconds(waitTime);
-    StartCoroutine(getPointsAndProcess(FrameProcessor.AverageSendTime));
-
-    frameProvider.getFrame(frame);
+  private IEnumerator getPointsAndProcess() {
+    Color32[] frame = frameProvider.getFrame();
 
     IEnumerator poseDataEnumerator;
 
     if (encode) {
       IEnumerator frameEnumerator = encoder.processFrame(frame);
       yield return frameEnumerator;
-
-      if (frameEnumerator == null) {
-        yield break;
-      }
 
       Byte[] encodedFrame = (Byte[])frameEnumerator.Current;
 
@@ -78,12 +72,10 @@ public class PoseDataProvider : MonoBehaviour {
     }
 
     yield return poseDataEnumerator;
-
-    if (poseDataEnumerator.Current == null) {
-      yield break;
-    }
+    StartCoroutine(getPointsAndProcess());
 
     poseData = (PoseData)poseDataEnumerator.Current;
+    this.frame = frame;
 
     onUpdatePose.ForEach(callback => callback());
 

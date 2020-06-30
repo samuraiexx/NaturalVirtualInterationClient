@@ -8,7 +8,7 @@ public class TestFrameProvider : FrameProvider {
 
   public TestFrameProvider(int width, int height) : base(width, height) { }
 
-  public override void getFrame(Color32[] frame) {
+  public override Color32[] getFrame() {
     var image = File.ReadAllBytes($"{Application.dataPath}//hands//hand{frameCounter}.png");
 
     var texture = new Texture2D(0, 0);
@@ -16,7 +16,6 @@ public class TestFrameProvider : FrameProvider {
 
     frameCounter = (frameCounter + 1) % FRAMES;
 
-    var tmpFrame = texture.GetPixels32();
-    Array.Copy(tmpFrame, frame, tmpFrame.Length);
+    return texture.GetPixels32();
   }
 }

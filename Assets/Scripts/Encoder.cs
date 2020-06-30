@@ -18,7 +18,6 @@ public class Encoder {
   private static Encoder encoder;
   private Byte[] encodedDataBuffer, rgbDataBuffer;
   private bool encodingFrame = false;
-  private long lastId = 0;
 
   public static Encoder getEncoder(int width, int height) {
     if (encoder == null || encoder.width != width || encoder.height != height) {
@@ -29,12 +28,7 @@ public class Encoder {
   }
 
   public IEnumerator processFrame(Color32[] frame) {
-    long id = ++lastId;
-    yield return new WaitUntil(() => encodingFrame == false || lastId > id);
-    if (lastId > id) {
-      yield return null;
-      yield break;
-    }
+    yield return new WaitUntil(() => encodingFrame == false);
 
     encodingFrame = true;
 
@@ -56,8 +50,8 @@ public class Encoder {
     // double deltaTime = (DateTime.Now - startTime).TotalSeconds;
     // Debug.Log($"Copy array deltaTime: {deltaTime}");
 
-    encodingFrame = false;
     yield return encodedData;
+    encodingFrame = false;
   }
 
   private Encoder(int width, int height) {

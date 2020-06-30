@@ -16,13 +16,12 @@ public class CameraFrameProvider : FrameProvider {
     backCam.Play();
   }
 
-  public override void getFrame(Color32[] frame) {
+  public override Color32[] getFrame() {
     if (Time.time - startTime > 2 && backCam == null) {
       backCam = new WebCamTexture("Remote Camera 0", width, height, FPS);
       backCam.Play();
     }
 
-    backCam.GetPixels32(frame);
-    return;
+    return backCam.GetPixels32();
   }
 }

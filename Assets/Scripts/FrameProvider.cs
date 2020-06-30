@@ -5,7 +5,7 @@ public abstract class FrameProvider {
   protected int height;
   protected const int FPS = 30;
 
-  public abstract void getFrame(Color32[] frame);
+  public abstract Color32[] getFrame();
   public FrameProvider(int width, int height) {
     this.width = width;
     this.height = height;
