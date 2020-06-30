@@ -13,16 +13,18 @@ public class RenderHand : MonoBehaviour {
   /** The pulse joint is not the root node, so we store it
   /** in another GameObject **/
   private GameObject handPulseJoint;
+  private float[] latestRotation;
 
   void Start() {
     mainCamera = GameObject.FindGameObjectWithTag("MainCamera");
     hand = ModelUtils.createHand();
     handPulseJoint = hand.transform.GetChild(0).GetChild(0).gameObject;
+    latestRotation = new float[24];
 
     poseDataProvider = PoseDataProviderObject.GetComponent<PoseDataProvider>();
 
     poseDataProvider.onUpdatePose.Add(drawCurrentHandOnProjectionScreen);
-    poseDataProvider.onUpdatePose.Add(renderCurrentHand);
+    poseDataProvider.onUpdatePose.Add(updateHand);
 
     // grabber = new Grabber(); <= Move to a different Object
   }
@@ -116,7 +118,7 @@ public class RenderHand : MonoBehaviour {
     );
   }
 
-  private void renderCurrentHand() {
+  private void updateHand() {
     var poseData = poseDataProvider.poseData;
     if (poseData.lostTrack) {
       return;
@@ -130,12 +132,37 @@ public class RenderHand : MonoBehaviour {
 
     lastHandObjects.Add(root);
 
+    handPulseJoint.transform.position = poseData.points3d[0];
+
+    for (int i=1; i<=handPulseJoint.transform.childCount; i++) {
+      rotateJointDfs(handPulseJoint.transform.GetChild(i-1), poseData.angles, 4*i);
+    }
+
+    for (int i=0; i<latestRotation.Length; i++) {
+      latestRotation[i] = poseData.angles[i];
+    }
+
     for (int id = 0; id < points.Length; id++) {
       int parentId = getParentId(id);
       var bone = ModelUtils.createBone(points[parentId], points[id], mainCamera.transform);
 
       lastHandObjects.Add(bone);
     }
+  }
+
+  private void rotateJointDfs(Transform joint, float[] angles, int id) {
+    if (id % 4 == 0) {
+      joint.RotateAround(joint.position, joint.right, Mathf.Rad2Deg*(angles[id] - latestRotation[id]));
+      joint.RotateAround(joint.position, joint.forward, Mathf.Rad2Deg*(angles[id+1] - latestRotation[id+1]));
+
+      rotateJointDfs(joint.GetChild(0), angles, id+2);
+      return;
+    }
+
+    joint.RotateAround(joint.position, joint.right, Mathf.Rad2Deg*(angles[id] - latestRotation[id]));
+    
+    if (id % 4 == 3) return;
+    rotateJointDfs(joint.GetChild(0), angles, id+1);
   }
 
   ~RenderHand() {

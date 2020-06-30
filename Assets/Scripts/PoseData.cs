@@ -7,7 +7,7 @@ public class PoseData {
   public bool lostTrack;
   public Vector3[] points3d;
   public Vector2[] points2d;
-  public double[] angles;
+  public float[] angles;
 
   public static implicit operator PoseData(SerializablePoseData rValue) {
     return new PoseData {
@@ -24,7 +24,7 @@ public class SerializablePoseData {
   public bool lostTrack = true;
   public SerializableVector3[] points3d = null;
   public SerializableVector2[] points2d = null;
-  public double[] angles = null;
+  public float[] angles = null;
 }
 
 [Serializable]

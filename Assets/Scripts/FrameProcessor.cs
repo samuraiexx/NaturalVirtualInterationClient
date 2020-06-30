@@ -34,6 +34,8 @@ public class FrameProcessor {
 
     PoseData poseData = JsonUtility.FromJson<SerializablePoseData>(json);
 
+    Debug.Log(String.Join("\n", poseData.angles));
+
     if (poseData.lostTrack) {
       yield return poseData;
       yield break;

@@ -2,7 +2,7 @@
 
 public class ModelUtils {
   static public GameObject createHand() {
-    Object prefab = Resources.Load<Object>("hand_prefab");
+    Object prefab = Resources.Load<Object>("LHand");
     return (GameObject)Object.Instantiate(prefab);
   }
 
