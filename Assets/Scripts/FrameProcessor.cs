@@ -8,27 +8,45 @@ public class FrameProcessor {
   private int port;
   private const int JOINTS_3D = 21;
   private const int JOINTS_2D = 21;
-  Encoder encoder;
+  private int width, height;
+  public static float AverageSendTime = 0.120f;
+  public static long SendCounter = 0;
+  private long lastId = 0;
+  private bool sendingFrame = false;
+
 
   public FrameProcessor(string ipAddress, int port, int width, int height) {
     this.ipAddress = ipAddress;
     this.port = port;
-    encoder = Encoder.getEncoder(width, height);
+    this.width = width;
+    this.height = height;
   }
 
-  public IEnumerator getHandPoseData(Color32[] frame) {
-    // TODO: Change to BSON
-    Byte[] encodedFrame = encoder.processFrame(frame);
+  public IEnumerator getHandPoseData(Byte[] frame, bool encoded) {
+    long id = ++lastId;
+    yield return new WaitUntil(() => sendingFrame == false || lastId > id);
+    if (lastId > id) {
+      yield return null;
+      yield break;
+    }
 
-    var IESendEncodedFrame = sendEncodedFrame(encodedFrame);
+    sendingFrame = true;
 
-    yield return IESendEncodedFrame;
-    var json = (string)IESendEncodedFrame.Current;
+    IEnumerator IESendFrame = sendFrame(frame, encoded);
+    yield return IESendFrame;
+    sendingFrame = false;
+
+    var json = (string)IESendFrame.Current;
 
     PoseData poseData = JsonUtility.FromJson<SerializablePoseData>(json);
 
+    if (poseData.lostTrack) {
+      yield return poseData;
+      yield break;
+    }
+
     const float newScale = 0.0015f;
-    var root = poseData.lostTrack ? new Vector3() : newScale * poseData.points3d[0];
+    var root = newScale * poseData.points3d[0];
 
     for (int i = 0; i < poseData.points3d.Length; i++) {
       poseData.points3d[i] = newScale * poseData.points3d[i];
@@ -43,15 +61,24 @@ public class FrameProcessor {
     yield return poseData;
   }
 
-  IEnumerator sendEncodedFrame(Byte[] data) {
+  IEnumerator sendFrame(Byte[] data, bool encoded) {
+    // Debug.Log($"Data: {data.Length}");
+    DateTime startTime = DateTime.Now;
     UnityWebRequest www = UnityWebRequest.Put($"http://{ipAddress}:{port}/processFrame", data);
+    if (encoded) {
+      www.SetRequestHeader("Encoded", "vp8");
+    }
     yield return www.SendWebRequest();
 
     if (www.isNetworkError || www.isHttpError) {
       throw new Exception(www.error);
-      // TODO
+      // TODO: Deal with erros from server properly
     } else {
       yield return www.downloadHandler.text;
     }
+    double deltaTime = (DateTime.Now - startTime).TotalSeconds;
+    AverageSendTime = (float)(AverageSendTime * SendCounter + deltaTime) / (++SendCounter);
+
+    // Debug.Log($"Send data deltaTime: {deltaTime}");
   }
 }

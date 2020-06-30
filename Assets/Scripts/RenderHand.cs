@@ -3,93 +3,32 @@ using System.Collections.Generic;
 using UnityEngine;
 using System.Collections;
 
-public enum RunModes { FAKE_FRAMES, UNITY_REMOTE, PRODUCTION };
 public class RenderHand : MonoBehaviour {
-  public string ipAddress = "127.0.0.1";
-  public int port = 3030;
   public GameObject projectionScreen;
-  public RunModes runMode = RunModes.PRODUCTION;
-  public Vector3[] currentJointsPosition {
-    get;
-    private set;
-  }
-
-  private FrameProcessor frameProcessor;
-  private FrameProvider frameProvider;
-  private Grabber grabber;
+  public GameObject PoseDataProviderObject;
+  private PoseDataProvider poseDataProvider;
   private List<GameObject> lastHandObjects = new List<GameObject>();
   private GameObject mainCamera;
   private GameObject hand;
   /** The pulse joint is not the root node, so we store it
   /** in another GameObject **/
   private GameObject handPulseJoint;
-  private DateTime lastFrameProcessTime;
-  private double processMinDeltaTime = 0.030;
-  private Color32[] frame;
-  private PoseData poseData = null;
-  private bool destroyed = false;
 
   void Start() {
     mainCamera = GameObject.FindGameObjectWithTag("MainCamera");
     hand = ModelUtils.createHand();
     handPulseJoint = hand.transform.GetChild(0).GetChild(0).gameObject;
 
-    grabber = new Grabber();
+    poseDataProvider = PoseDataProviderObject.GetComponent<PoseDataProvider>();
 
-    switch (runMode) {
-      case RunModes.FAKE_FRAMES:
-        frameProvider = new TestFrameProvider(projectionScreen);
-        break;
-      case RunModes.UNITY_REMOTE:
-        frameProvider = new CameraFrameProvider(projectionScreen, true);
-        break;
-      case RunModes.PRODUCTION:
-        frameProvider = new CameraFrameProvider(projectionScreen);
-        break;
-    }
+    poseDataProvider.onUpdatePose.Add(drawCurrentHandOnProjectionScreen);
+    poseDataProvider.onUpdatePose.Add(renderCurrentHand);
 
-    frameProcessor = new FrameProcessor(
-      ipAddress, port, frameProvider.WIDTH, frameProvider.HEIGHT
-    );
-    lastFrameProcessTime = DateTime.Now;
-
-    frame = new Color32[frameProvider.WIDTH * frameProvider.HEIGHT];
-
-    StartCoroutine(getPointsAndProcess());
-  }
-
-  void Update() {
-  }
-
-  private IEnumerator getPointsAndProcess() {
-    while (!destroyed) {
-      double deltaTime = (DateTime.Now - lastFrameProcessTime).TotalSeconds;
-      // Debug.Log($"Processing deltaTime: {deltaTime}");
-
-      if (deltaTime < processMinDeltaTime) {
-        yield return new WaitForSecondsRealtime((float)(processMinDeltaTime - deltaTime));
-      }
-      lastFrameProcessTime = DateTime.Now;
-
-      frameProvider.getFrame(frame);
-      drawCurrentHandOnProjectionScreen();
-
-      IEnumerator poseDataEnumerator = frameProcessor.getHandPoseData(frame);
-      yield return poseDataEnumerator;
-
-      poseData = (PoseData)poseDataEnumerator.Current;
-
-      if (poseData.lostTrack) {
-        // TODO: Remove current pose?
-        continue;
-      }
-
-      renderCurrentHand();
-      grabber.processGrabbAction(poseData.points3d);
-    }
+    // grabber = new Grabber(); <= Move to a different Object
   }
 
   private void drawCurrentHandOnProjectionScreen() {
+    var poseData = poseDataProvider.poseData;
     if (poseData == null || poseData.lostTrack) {
       return;
     }
@@ -97,32 +36,36 @@ public class RenderHand : MonoBehaviour {
     Vector2[] points = new Vector2[poseData.points2d.Length];
     Array.Copy(poseData.points2d, points, poseData.points2d.Length);
 
-    Texture2D backgroundTexture = projectionScreen
-      .GetComponent<Renderer>()
-      .material.mainTexture as Texture2D;
+    Texture2D texture = new Texture2D(poseDataProvider.width, poseDataProvider.height);
+
+    texture.SetPixels32(poseDataProvider.frame);
 
     for (int id = 0; id < points.Length; id++) {
       var parentId = getParentId(id);
       // For some reason the points are mirrored, this is  a hack to fix it
-      points[id] = new Vector2(points[id].x, frameProvider.HEIGHT - points[id].y);
+      points[id] = new Vector2(points[id].x, poseDataProvider.height - points[id].y);
 
       TextureUtils.drawCircle(
-        backgroundTexture,
+        texture,
         points[id],
         3,
         id <= 5 ? new Color(0, 255, 0) : new Color(255, 0, 0)
       );
 
       TextureUtils.drawLine(
-        backgroundTexture,
+        texture,
         points[id],
         points[parentId],
         new Color(255, 0, 0)
       );
-
     }
 
-    backgroundTexture.Apply();
+    texture.Apply();
+
+    projectionScreen
+      .GetComponent<Renderer>()
+      .material
+      .mainTexture = texture;
   }
 
   private void setPulseRotation(Vector3[] points) {
@@ -169,6 +112,7 @@ public class RenderHand : MonoBehaviour {
   }
 
   private void renderCurrentHand() {
+    var poseData = poseDataProvider.poseData;
     if (poseData == null || poseData.lostTrack) {
       return;
     }
@@ -190,7 +134,6 @@ public class RenderHand : MonoBehaviour {
   }
 
   ~RenderHand() {
-    destroyed = true;
     lastHandObjects.ForEach(Destroy);
     lastHandObjects.Clear();
     Destroy(hand);

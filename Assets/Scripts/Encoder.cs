@@ -1,11 +1,9 @@
 ﻿using System;
 using UnityEngine;
 using System.Runtime.InteropServices;
+using System.Collections;
 
 public class Encoder {
-  private int width, height;
-  private static Encoder encoder;
-  private Byte[] encodedDataBuffer, rgbDataBuffer;
 
   [DllImport("NaturalVirtualInteractionVideoEncoder")]
   extern static int vpx_init(int width, int height);
@@ -16,6 +14,12 @@ public class Encoder {
   [DllImport("NaturalVirtualInteractionVideoEncoder")]
   extern static void vpx_cleanup();
 
+  private int width, height;
+  private static Encoder encoder;
+  private Byte[] encodedDataBuffer, rgbDataBuffer;
+  private bool encodingFrame = false;
+  private long lastId = 0;
+
   public static Encoder getEncoder(int width, int height) {
     if (encoder == null || encoder.width != width || encoder.height != height) {
       Debug.Log("Creating new Encoder...");
@@ -24,10 +28,15 @@ public class Encoder {
     return encoder;
   }
 
-  public byte[] processFrame(Color32[] frame) {
-    // DateTime startTime = DateTime.Now;
+  public IEnumerator processFrame(Color32[] frame) {
+    long id = ++lastId;
+    yield return new WaitUntil(() => encodingFrame == false || lastId > id);
+    if (lastId > id) {
+      yield return null;
+      yield break;
+    }
 
-    int encodedSize;
+    encodingFrame = true;
 
     for (int i = 0; i < height; i++) {
       int lineOffset = 3 * width * height - 3 * width * (i + 1);
@@ -38,7 +47,8 @@ public class Encoder {
       }
     }
 
-    encodedSize = vpx_encode(rgbDataBuffer, encodedDataBuffer, false);
+    // DateTime startTime = DateTime.Now;
+    int encodedSize = vpx_encode(rgbDataBuffer, encodedDataBuffer, false);
 
     Byte[] encodedData = new byte[encodedSize];
     Array.Copy(encodedDataBuffer, 0, encodedData, 0, encodedSize);
@@ -46,7 +56,8 @@ public class Encoder {
     // double deltaTime = (DateTime.Now - startTime).TotalSeconds;
     // Debug.Log($"Copy array deltaTime: {deltaTime}");
 
-    return encodedData;
+    encodingFrame = false;
+    yield return encodedData;
   }
 
   private Encoder(int width, int height) {

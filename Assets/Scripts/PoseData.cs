@@ -3,7 +3,7 @@ using System.Runtime.Serialization;
 using UnityEngine;
 using System.Linq;
 
-class PoseData {
+public class PoseData {
   public bool lostTrack;
   public Vector3[] points3d;
   public Vector2[] points2d;
@@ -20,7 +20,7 @@ class PoseData {
 }
 
 [Serializable]
-class SerializablePoseData {
+public class SerializablePoseData {
   public bool lostTrack = true;
   public SerializableVector3[] points3d = null;
   public SerializableVector2[] points2d = null;
