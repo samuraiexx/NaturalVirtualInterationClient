@@ -75,49 +75,6 @@ public class RenderHand : MonoBehaviour {
       .mainTexture = texture;
   }
 
-  private void setPulseRotation(Vector3[] points) {
-    Vector3 fingerJoint = handPulseJoint.transform.GetChild(1).position;
-    Vector3 pinkyJoint = handPulseJoint.transform.GetChild(4).position;
-
-    Vector3 currentPulseToFinger = fingerJoint - handPulseJoint.transform.position;
-    Vector3 currentPulseToPinky = pinkyJoint - handPulseJoint.transform.position;
-
-    Vector3 newPulseToFinger = points[7] - points[0];
-    Vector3 newPulseToPinky = points[22] - points[0];
-
-    handPulseJoint.transform.Rotate(
-      Quaternion.FromToRotation(currentPulseToFinger, newPulseToFinger).eulerAngles
-    );
-
-    handPulseJoint.transform.Rotate(
-      newPulseToFinger,
-      Vector3.Angle(currentPulseToPinky, newPulseToPinky)
-    );
-  }
-
-  private void updateJointsPositions(GameObject joint,
-    Vector3[] points, int id = 0) {
-    if (hand == null) {
-      return;
-    }
-    moveJoint(joint, points[id], points[getParentId(id)]);
-    for (int i = 0; i < joint.transform.childCount; i++) {
-      GameObject child = joint.transform.GetChild(i).gameObject;
-      updateJointsPositions(child, points, id + 1);
-    }
-  }
-
-  private void moveJoint(GameObject joint, Vector3 orig, Vector3 dest) {
-    var delta = dest - orig;
-
-    joint.transform.SetPositionAndRotation(
-      orig + delta,
-      Quaternion.FromToRotation(
-        new Vector3(0, 0, -1), delta
-      )
-    );
-  }
-
   private void updateHand() {
     var poseData = poseDataProvider.poseData;
     if (poseData.lostTrack) {
