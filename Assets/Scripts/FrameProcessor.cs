@@ -48,7 +48,7 @@ public class FrameProcessor {
       poseData.points3d[i] = new Vector3(
         poseData.points3d[i].x - 0f * root.x,
         -poseData.points3d[i].y + 0f * root.y,
-        1.5f + poseData.points3d[i].z
+        -poseData.points3d[i].z
       );
     }
 
