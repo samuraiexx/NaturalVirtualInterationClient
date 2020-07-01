@@ -10,7 +10,7 @@ public class PoseDataProvider : MonoBehaviour {
   public string ipAddress = "127.0.0.1";
   public int port = 3030;
   public int width = 640, height = 480;
-  public List<Action> onUpdatePose;
+  public List<Action> onUpdatePose = new List<Action>();
 
   public Color32[] frame { get; private set; }
   public PoseData poseData { get; private set; }
@@ -24,8 +24,6 @@ public class PoseDataProvider : MonoBehaviour {
   private int processCount = 0;
 
   void Start() {
-    onUpdatePose = new List<Action>();
-
     switch (runMode) {
       case RunModes.FAKE_FRAMES:
         frameProvider = new TestFrameProvider(width, height);

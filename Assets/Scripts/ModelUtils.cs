@@ -33,7 +33,7 @@ public class ModelUtils {
     bone.transform.localPosition = orig + delta / modelHeight;
 
     bone.GetComponent<Renderer>().material.color = new Color(255, 0, 0);
-    bone.AddComponent<CapsuleCollider>();
+    // bone.AddComponent<CapsuleCollider>();
 
     return bone;
   }
@@ -45,7 +45,7 @@ public class ModelUtils {
     sphere.transform.localScale = new Vector3(0.03f, 0.03f, 0.03f);
     sphere.transform.localPosition = position;
     sphere.GetComponent<Renderer>().material.color = new Color(255, 0, 0);
-    sphere.AddComponent<CapsuleCollider>();
+    // sphere.AddComponent<CapsuleCollider>();
 
     return sphere;
   }
