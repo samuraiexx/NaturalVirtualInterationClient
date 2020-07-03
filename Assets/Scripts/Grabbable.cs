@@ -22,28 +22,32 @@ public class Grabbable : MonoBehaviour {
         .Euler(initialRotation.eulerAngles + deltaRotation);
     }
 
-    gameObject.transform.position = (
+    gameObject.transform.localPosition = (
       initialPosition
       + (grabber.currentGrabPosition - grabber.initialGrabPosition)
     );
   }
 
   private bool wasKinematic, wasUsingGravity;
+  Transform oldParent = null;
 
   public void startGrabbing(Grabber grabber) {
     this.grabber = grabber;
-    initialPosition = gameObject.transform.position;
-    initialRotation = gameObject.transform.rotation;
 
     var rigidBody = this.gameObject.GetComponent<Rigidbody>();
     var collider = this.gameObject.GetComponent<Collider>();
 
     wasKinematic = rigidBody.isKinematic;
     wasUsingGravity = rigidBody.useGravity;
+    oldParent = this.transform.parent;
 
     collider.enabled = false;
     rigidBody.isKinematic = false;
     rigidBody.useGravity = false;
+    this.transform.parent = GameObject.FindGameObjectWithTag("CameraRig").transform;
+
+    initialPosition = gameObject.transform.localPosition;
+    initialRotation = gameObject.transform.localRotation;
   }
 
   public void endGrabbing() {
@@ -55,6 +59,7 @@ public class Grabbable : MonoBehaviour {
     collider.enabled = true;
     rigidBody.isKinematic = wasKinematic;
     rigidBody.useGravity = wasUsingGravity;
+    this.transform.parent = oldParent;
 
     rigidBody.angularVelocity = Vector3.zero;
     rigidBody.velocity = Vector3.zero;

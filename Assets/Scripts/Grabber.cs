@@ -57,6 +57,7 @@ public class Grabber : MonoBehaviour {
       .Find(gameObject => gameObject.GetComponent<Grabbable>() != null);
 
     if (grabbedObject == null) return;
+
     grabbedObject.GetComponent<Grabbable>().startGrabbing(this);
   }
 
