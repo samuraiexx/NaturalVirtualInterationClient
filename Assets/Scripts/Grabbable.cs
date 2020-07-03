@@ -44,7 +44,7 @@ public class Grabbable : MonoBehaviour {
     collider.enabled = false;
     rigidBody.isKinematic = false;
     rigidBody.useGravity = false;
-    this.transform.parent = GameObject.FindGameObjectWithTag("CameraRig").transform;
+    this.transform.parent = GameObject.FindGameObjectWithTag("MainCamera").transform;
 
     initialPosition = gameObject.transform.localPosition;
     initialRotation = gameObject.transform.localRotation;
